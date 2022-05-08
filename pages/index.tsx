@@ -5,15 +5,11 @@ import { getSortedPostsData } from '../lib/posts'
 import Link from 'next/link'
 import Date from '../components/date'
 import { GetStaticProps, NextPage } from "next";
+import { Post } from '../types/post'
 
-export type Post = {
-  id: string;
-  date: string;
-  title: string;
-};
 
 export type Props = {
-  allPostsData: Post[];
+  allPostsData: Omit<Post, "contentHtml">[];
 }
 
 const Home: NextPage<Props> = ({ allPostsData }) =>  {

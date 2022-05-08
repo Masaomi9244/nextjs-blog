@@ -3,12 +3,13 @@ import path from 'path'
 import matter from 'gray-matter'
 import { remark } from 'remark'
 import html from 'remark-html'
-import { Post } from '../pages'
+import { Post } from '../types/post'
+
 
 
 const postsDirectory = path.join(process.cwd(), 'posts')
 
-export function getSortedPostsData(): Post[] {
+export function getSortedPostsData(): Omit<Post, "contentHtml">[] {
   // Get file names under /posts
   const fileNames = fs.readdirSync(postsDirectory)
   const allPostsData = fileNames.map(fileName => {
@@ -22,7 +23,7 @@ export function getSortedPostsData(): Post[] {
     // Use gray-matter to parse the post metadata section
     const matterResult = matter(fileContents)
 
-    
+
     if (typeof matterResult.data.date !== "string") {
       throw Error("title must be string!");
     }
@@ -48,7 +49,7 @@ export function getSortedPostsData(): Post[] {
   })
 }
 
-export function getAllPostIds() {
+export function getAllPostIds(): { params: Pick<Post, "id"> }[] {
   const fileNames = fs.readdirSync(postsDirectory)
   return fileNames.map(fileName => {
     return {
@@ -59,12 +60,20 @@ export function getAllPostIds() {
   })
 }
 
-export async function getPostData(id: string) {
+export async function getPostData(id: string): Promise<Post> {
   const fullPath = path.join(postsDirectory, `${id}.md`)
   const fileContents = fs.readFileSync(fullPath, 'utf8')
 
   // Use gray-matter to parse the post metadata section
-  const matterResult = matter(fileContents)
+  const matterResult = matter(fileContents);
+
+  if (typeof matterResult.data.date !== "string") {
+    throw Error("title must be string!");
+  }
+
+  if (typeof matterResult.data.title !== "string") {
+    throw Error("title must be string!");
+  }
 
   // Use remark to convert markdown into HTML string
   const processedContent = await remark()
@@ -76,6 +85,7 @@ export async function getPostData(id: string) {
   return {
     id,
     contentHtml,
-    ...matterResult.data
+    date: matterResult.data.date,
+    title: matterResult.data.title,
   }
 }
